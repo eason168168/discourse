@@ -13,6 +13,9 @@ import pretender, {
   response,
 } from "discourse/tests/helpers/create-pretender";
 import { cloneJSON } from "discourse-common/lib/object";
+import { PLUGIN_API_VERSION, withPluginApi } from "discourse/lib/plugin-api";
+import { registerTemporaryModule } from "../helpers/temporary-module-helper";
+import { hbs } from "ember-cli-htmlbars";
 
 acceptance("User Preferences - Account", function (needs) {
   needs.user();
@@ -305,6 +308,22 @@ acceptance("User Preferences - Account", function (needs) {
       },
       "includes the right pick avatar request params"
     );
+  });
+
+  test("addSaveAttributeToPreferencesController plugin API", async function (assert) {
+    withPluginApi(PLUGIN_API_VERSION, (api) => {
+      api.addSaveAttributeToPreferencesController(
+        "account",
+        "some_plugin_prop"
+      );
+    });
+    registerTemporaryModule(
+      "discourse/test-plugin-custom-preferences-control/templates/connectors/user-preferences-account/custom-control",
+      hbs`<PreferenceCheckbox @checked={{@outletArgs.model.some_plugin_prop}}/>`
+    );
+
+    await visit("/u/eviltrout/preferences/account");
+    await pauseTest();
   });
 });
 
